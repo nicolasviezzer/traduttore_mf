@@ -488,14 +488,21 @@
 
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
-    <h2>La tua API key</h2>
-    <p>
+    <h2>API key</h2>
+    <p id="sharedNote" hidden>
+      Questo sito ha già una <b>key condivisa</b>: Decoder funziona senza che tu faccia niente.
+      Se preferisci non pesare sulla quota comune — o se vedi l'errore «richieste esaurite» —
+      incolla qui sotto la tua, gratuita, presa da
+      <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.
+      Resta salvata solo in questo browser.
+    </p>
+    <p id="ownNote">
       Decoder usa la <b>Gemini API di Google</b>, che ha un piano gratuito. La key resta
       salvata solo in questo browser (localStorage) e viene inviata unicamente a
       <code>generativelanguage.googleapis.com</code>. Puoi crearne una in trenta secondi su
       <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.
     </p>
-    <div class="field-label">API key</div>
+    <div class="field-label">La tua API key</div>
     <input class="key-input" id="keyInput" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false">
     <div class="field-label">Modello</div>
     <select class="model-select" id="modelSelect">
@@ -517,6 +524,12 @@
 (function () {
   "use strict";
 
+  // GitHub Actions sostituisce il segnaposto qui sotto con il secret GEMINI_API_KEY
+  // al momento del deploy (vedi .github/workflows/deploy.yml). In locale il segnaposto
+  // resta com'è, quindi si ricade sulla key personale inserita dal menu ⚙️.
+  var BUILD_KEY = "__GEMINI_API_KEY__";
+  var SHARED_KEY = /^__/.test(BUILD_KEY) ? "" : BUILD_KEY;
+
   var DEFAULT_MODEL = "gemini-3.5-flash-lite";
   var KEY_STORAGE = "decoder_gemini_api_key";
   var MODEL_STORAGE = "decoder_gemini_model";
@@ -535,7 +548,7 @@
    "resultCard","resultLabel","translationText","subtextText","altBtn",
    "replyBtn","replyBox","replyText","replyLabel","copyBtn",
    "settingsBtn","keyBanner","keyBannerBtn","modalOverlay","keyInput","modelSelect",
-   "saveKeyBtn","closeModalBtn","keyStatus"].forEach(function (id) {
+   "saveKeyBtn","closeModalBtn","keyStatus","sharedNote","ownNote"].forEach(function (id) {
     els[id] = document.getElementById(id);
   });
 
@@ -825,8 +838,19 @@
     try { return fn(); } catch (e) { return fallback; }
   }
 
-  function getKey() {
+  function getOwnKey() {
     return store(function () { return localStorage.getItem(KEY_STORAGE) || ""; }, "");
+  }
+
+  // La key personale ha sempre la precedenza su quella condivisa del sito.
+  function getKey() {
+    return getOwnKey() || SHARED_KEY;
+  }
+
+  function keyStatusText() {
+    if (getOwnKey()) return "Stai usando la tua key, salvata in questo browser.";
+    if (SHARED_KEY) return "Stai usando la key condivisa del sito.";
+    return "";
   }
 
   function getModel() {
@@ -838,10 +862,12 @@
   }
 
   function openModal() {
-    els.keyInput.value = getKey();
+    els.keyInput.value = getOwnKey();
     els.modelSelect.value = getModel();
     if (!els.modelSelect.value) els.modelSelect.value = DEFAULT_MODEL;
-    els.keyStatus.textContent = getKey() ? "Key salvata in questo browser." : "";
+    els.sharedNote.hidden = !SHARED_KEY;
+    els.ownNote.hidden = !!SHARED_KEY;
+    els.keyStatus.textContent = keyStatusText();
     els.modalOverlay.classList.add("show");
   }
 
@@ -858,7 +884,7 @@
     });
     els.keyStatus.textContent = val
       ? "Key salvata in questo browser."
-      : "Key rimossa.";
+      : (SHARED_KEY ? "Key rimossa: torni a usare quella condivisa del sito." : "Key rimossa.");
     refreshKeyBanner();
     setTimeout(closeModal, 500);
   }

@@ -1,0 +1,66 @@
+name: Deploy su GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Un deploy alla volta; se ne arrivano due, vince l'ultimo.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepara il sito e inietta la API key
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "::error::Manca il secret GEMINI_API_KEY. Impostalo in Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+          mkdir -p _site
+          cp index.html traduttore.html .nojekyll _site/
+
+          # Sostituzione fatta in Node per non doversi preoccupare
+          # dell'escaping dei caratteri della key dentro sed.
+          node -e '
+            const fs = require("fs");
+            const token = "__GEMINI_API_KEY__";
+            const file = "_site/index.html";
+            const html = fs.readFileSync(file, "utf8");
+            if (!html.includes(token)) {
+              console.error("::error::Segnaposto " + token + " non trovato in index.html: la key non e stata iniettata.");
+              process.exit(1);
+            }
+            fs.writeFileSync(file, html.split(token).join(process.env.GEMINI_API_KEY));
+          '
+
+          echo "Key iniettata in _site/index.html."
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
