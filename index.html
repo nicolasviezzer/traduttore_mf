@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Decoder — il traduttore tra codici</title>
+<meta name="description" content="Un traduttore ironico tra «linguaggio maschile» e «linguaggio femminile». Per gioco, non per scienza.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
@@ -36,6 +37,7 @@
   }
   header{
     margin-bottom:22px;
+    position:relative;
   }
   .eyebrow{
     font-size:12px;
@@ -97,7 +99,7 @@
     justify-content:center;
     gap:6px;
   }
-  .switch button.active{ opacity:1; }
+  .switch button.active{ opacity:1; color:#fff; }
   .switch .thumb{
     position:absolute;
     top:4px;
@@ -113,7 +115,6 @@
     transform:translateX(100%);
     background:var(--teal);
   }
-  .switch button.active{ color:#fff; }
 
   .arrow{
     text-align:center;
@@ -181,6 +182,10 @@
     font-weight:700;
     color:var(--violet);
     margin-bottom:8px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
   }
   .card.teal .label{ color:var(--teal); }
   .translation{
@@ -189,6 +194,8 @@
     line-height:1.45;
     margin:0 0 12px;
   }
+  .translation.swap{ animation:fadein .25s ease; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
   .subtext{
     font-size:13px;
     line-height:1.5;
@@ -198,6 +205,23 @@
     margin:0;
   }
   .subtext b{ opacity:1; }
+
+  .alt-btn{
+    border:none;
+    background:none;
+    font-family:'Space Grotesk', sans-serif;
+    font-size:11px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    font-weight:700;
+    color:inherit;
+    opacity:.6;
+    cursor:pointer;
+    padding:0;
+    white-space:nowrap;
+  }
+  .alt-btn:hover{ opacity:1; }
+  .alt-btn[hidden]{ display:none; }
 
   .reply-actions{
     margin-top:14px;
@@ -258,7 +282,6 @@
   }
   .copy:active{ transform:translateY(1px); }
 
-  header{ position:relative; }
   .settings-btn{
     position:absolute;
     top:2px;
@@ -316,6 +339,8 @@
     border-top:1.5px solid var(--ink);
     border-radius:20px 20px 0 0;
     padding:22px 20px 28px;
+    max-height:92vh;
+    overflow-y:auto;
   }
   .modal h2{
     font-family:'Fraunces', serif;
@@ -329,7 +354,15 @@
     margin:0 0 16px;
   }
   .modal a{ color:var(--violet); font-weight:700; }
-  .key-input{
+  .field-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    font-weight:700;
+    opacity:.55;
+    margin-bottom:6px;
+  }
+  .key-input, .model-select{
     width:100%;
     padding:13px;
     border-radius:12px;
@@ -337,7 +370,8 @@
     font-family:'Space Grotesk', sans-serif;
     font-size:14px;
     background:var(--card);
-    margin-bottom:10px;
+    color:var(--ink);
+    margin-bottom:14px;
   }
   .modal-actions{
     display:flex;
@@ -391,6 +425,7 @@
   @media (prefers-reduced-motion: reduce){
     .switch .thumb{ transition:none; }
     .dot{ animation:none; }
+    .translation.swap{ animation:none; }
   }
 </style>
 </head>
@@ -398,13 +433,13 @@
 <div class="app">
   <header>
     <button class="settings-btn" id="settingsBtn" aria-label="Impostazioni API key">⚙️</button>
-    <div class="eyebrow">Decoder v1</div>
+    <div class="eyebrow">Decoder v2 · Gemini</div>
     <h1>Cosa <em>intende</em><br>davvero dire.</h1>
     <p class="sub">Incolla un messaggio, scegli la direzione, e leggi tra le righe — per gioco, non per scienza.</p>
   </header>
 
   <div class="key-banner" id="keyBanner">
-    Per usare Decoder serve la tua API key di Anthropic, salvata solo in questo browser.
+    Per usare Decoder serve la tua API key di Google AI Studio (gratuita), salvata solo in questo browser.
     <button id="keyBannerBtn">Inseriscila qui</button>.
   </div>
 
@@ -416,7 +451,7 @@
 
   <div class="arrow">↓</div>
 
-  <textarea id="input" placeholder="Es: «Tutto ok, fai pure quello che vuoi»"></textarea>
+  <textarea id="input" placeholder="Es: «sto bene»"></textarea>
 
   <button class="go" id="goBtn">Decodifica</button>
 
@@ -429,7 +464,10 @@
 
   <div class="result" id="result">
     <div class="card" id="resultCard">
-      <div class="label" id="resultLabel">Traduzione</div>
+      <div class="label">
+        <span id="resultLabel">Traduzione</span>
+        <button class="alt-btn" id="altBtn" hidden>↻ un'altra lettura</button>
+      </div>
       <p class="translation" id="translationText"></p>
       <p class="subtext" id="subtextText"></p>
 
@@ -445,19 +483,28 @@
     </div>
   </div>
 
-  <p class="disclaimer">Traduzioni generate per ironia e leggerezza — nessuna pretesa scientifica su come "parlano" uomini o donne. Ognuno comunica a modo suo.</p>
+  <p class="disclaimer">Traduzioni generate per ironia e leggerezza — nessuna pretesa scientifica su come «parlano» uomini o donne. Ognuno comunica a modo suo.</p>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h2>La tua API key</h2>
     <p>
-      Decoder usa il tuo account Anthropic per generare le traduzioni. La key resta
-      salvata solo in questo browser (localStorage), non viene mai inviata altrove
-      se non direttamente ad api.anthropic.com. Puoi crearne una su
-      <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.
+      Decoder usa la <b>Gemini API di Google</b>, che ha un piano gratuito. La key resta
+      salvata solo in questo browser (localStorage) e viene inviata unicamente a
+      <code>generativelanguage.googleapis.com</code>. Puoi crearne una in trenta secondi su
+      <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.
     </p>
-    <input class="key-input" id="keyInput" type="password" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+    <div class="field-label">API key</div>
+    <input class="key-input" id="keyInput" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false">
+    <div class="field-label">Modello</div>
+    <select class="model-select" id="modelSelect">
+      <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite — consigliato, gratis</option>
+      <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite</option>
+      <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
+      <option value="gemini-3.5-flash">gemini-3.5-flash — più bravo, più lento</option>
+      <option value="gemini-flash-lite-latest">gemini-flash-lite-latest — alias sempre aggiornato</option>
+    </select>
     <div class="modal-actions">
       <button class="go" id="saveKeyBtn">Salva</button>
       <button class="ghost" id="closeModalBtn">Chiudi</button>
@@ -470,15 +517,24 @@
 (function () {
   "use strict";
 
+  var DEFAULT_MODEL = "gemini-3.5-flash-lite";
+  var KEY_STORAGE = "decoder_gemini_api_key";
+  var MODEL_STORAGE = "decoder_gemini_model";
+  var LEGACY_KEY_STORAGE = "decoder_anthropic_api_key";
+
   var direction = "MtoF";
   var lastExchange = null;
-  var STORAGE_KEY = "decoder_anthropic_api_key";
+  var readings = [];
+  var readingIndex = 0;
+
+  // La v1 usava Anthropic: quella key qui non serve più, meglio non lasciarla nel browser.
+  store(function () { localStorage.removeItem(LEGACY_KEY_STORAGE); });
 
   var els = {};
   ["input","goBtn","btnMtoF","btnFtoM","switch","loading","error","result",
-   "resultCard","resultLabel","translationText","subtextText",
+   "resultCard","resultLabel","translationText","subtextText","altBtn",
    "replyBtn","replyBox","replyText","replyLabel","copyBtn",
-   "settingsBtn","keyBanner","keyBannerBtn","modalOverlay","keyInput",
+   "settingsBtn","keyBanner","keyBannerBtn","modalOverlay","keyInput","modelSelect",
    "saveKeyBtn","closeModalBtn","keyStatus"].forEach(function (id) {
     els[id] = document.getElementById(id);
   });
@@ -486,6 +542,7 @@
   els.btnMtoF.addEventListener("click", function () { setDirection("MtoF"); });
   els.btnFtoM.addEventListener("click", function () { setDirection("FtoM"); });
   els.goBtn.addEventListener("click", runTranslation);
+  els.altBtn.addEventListener("click", cycleReading);
   els.replyBtn.addEventListener("click", suggestReply);
   els.copyBtn.addEventListener("click", copyReply);
   els.settingsBtn.addEventListener("click", openModal);
@@ -494,10 +551,111 @@
   els.modalOverlay.addEventListener("click", function (e) {
     if (e.target === els.modalOverlay) closeModal();
   });
-  els.saveKeyBtn.addEventListener("click", saveKey);
+  els.saveKeyBtn.addEventListener("click", saveSettings);
   els.input.addEventListener("keydown", function (e) {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) runTranslation();
   });
+
+  /* ------------------------------------------------------------------ *
+   *  Prompt
+   * ------------------------------------------------------------------ */
+
+  var SHARED_RULES = [
+    "REGOLE SEMPRE VALIDE:",
+    "- Tono leggero, affettuoso, auto-ironico. Mai giudicante, mai offensivo verso nessun genere.",
+    "- Gli stereotipi sono materiale comico, non verità: giocaci, non presentarli come dati di fatto.",
+    "- Se il messaggio è ambiguo, scegli la lettura più plausibile e simpatica, non la più drammatica.",
+    "- Italiano parlato e naturale. Niente virgolette attorno alla traduzione, niente markdown, niente emoji.",
+    "- \"alt\" è una SECONDA lettura, non una parafrasi della prima: deve partire da un livello diverso dello stesso messaggio, con la stessa lunghezza e lo stesso stile.",
+    "- \"subtext\" è UNA riga sola, massimo 12 parole, in terza persona: la battuta che chiude, non un riassunto.",
+    "- ECCEZIONE SERIA: se il messaggio tocca violenza, autolesionismo, sofferenza psicologica grave o una rottura reale, smetti di scherzare. In \"translation\" e in \"alt\" scrivi due righe serie e gentili che invitano a parlarne di persona, e in \"subtext\" scrivi: Qui non c'è niente da tradurre, c'è da parlarsi."
+  ].join("\n");
+
+  var PROMPT_MTOF = [
+    "Sei \"Decoder\", un traduttore ironico e affettuoso tra stili comunicativi.",
+    "",
+    "DIREZIONE: Lui → Lei.",
+    "Ricevi un messaggio scritto da un ragazzo: di solito corto, piatto, apparentemente neutro.",
+    "Il tuo lavoro è ESPANDERLO — srotolare ad alta voce tutti i livelli che lui ha compresso in tre parole, così come li sentirebbe lei.",
+    "",
+    "COME DEVE ESSERE \"translation\":",
+    "- Riparte dalle parole originali e le usa come ritornello: devono tornare 2-4 volte nella frase.",
+    "- Contiene l'esitazione e l'alternativa: «X, o forse Y — in ogni caso…».",
+    "- Fa emergere il livello meta: che cosa lui vuole che lei pensi o senta.",
+    "- Chiude con la giustificazione affettiva: «perché credo che…», «perché così…».",
+    "- UNA sola frase lunga che gira su se stessa, 25-55 parole, in prima persona, con la voce di lui.",
+    "- Non deve sembrare un'analisi dall'esterno: deve sembrare lui che finalmente dice tutto insieme.",
+    "",
+    "ESEMPI DEL TONO ESATTO:",
+    "",
+    "Messaggio: «sto bene»",
+    "translation: Sto bene, o starò bene, non lo so — in ogni caso voglio che tu pensi che sto bene, perché credo che se lo pensi tu poi finisca per essere vero anche per me.",
+    "subtext: Non è un bollettino medico, è una richiesta di fiducia.",
+    "",
+    "Messaggio: «fai tu»",
+    "translation: Fai tu, nel senso che una preferenza ce l'ho, ma non abbastanza forte da difenderla, e comunque preferisco che scegli tu così se poi va male non è colpa di nessuno dei due, soprattutto non mia.",
+    "subtext: «Fai tu» è delega, ma anche assicurazione sulla vita.",
+    "",
+    "Messaggio: «ok»",
+    "translation: Ok, cioè: ho letto, ho capito, su una parte piccola non sono d'accordo, ma quella parte piccola aprirebbe una conversazione lunga, quindi scrivo ok e spero che ok basti.",
+    "subtext: Due lettere per non aprire un discorso di due ore.",
+    "",
+    "Messaggio: «sono stanco»",
+    "translation: Sono stanco, e non è solo il lavoro, è che vorrei che te ne accorgessi senza che io debba spiegartelo, e dirti «sono stanco» è il modo più economico che ho trovato per chiedertelo lo stesso.",
+    "subtext: Non sta chiedendo riposo, sta chiedendo di essere visto.",
+    "",
+    SHARED_RULES
+  ].join("\n");
+
+  var PROMPT_FTOM = [
+    "Sei \"Decoder\", un traduttore ironico e affettuoso tra stili comunicativi.",
+    "",
+    "DIREZIONE: Lei → Lui.",
+    "Ricevi un messaggio scritto da una ragazza: di solito pieno di premesse, cuscinetti, rassicurazioni di cortesia e di un sottotesto che a lui sfugge.",
+    "Il tuo lavoro è COMPRIMERLO — togliere tutta l'imbottitura e lasciare solo la cosa vera, detta in un modo impossibile da fraintendere.",
+    "",
+    "COME DEVE ESSERE \"translation\":",
+    "- Corta e frontale: 1-3 frasi brevi, massimo 30 parole in tutto.",
+    "- Zero sottotesto residuo: quello che prima era implicito adesso è scritto nero su bianco.",
+    "- Calda, non aggressiva: dice la cosa vera, non lancia un'accusa.",
+    "- Prima persona, con la voce di lei.",
+    "- Se dentro c'è un test o una richiesta nascosta, la rende un'istruzione esplicita («chiedimelo una seconda volta»).",
+    "",
+    "ESEMPI DEL TONO ESATTO:",
+    "",
+    "Messaggio: «Va bene, fai come vuoi»",
+    "translation: Non va bene. Vorrei che restassi. Se esci ci resto male, e no, non farò finta di niente domani.",
+    "subtext: Tradotto in una lingua che non ha il congiuntivo del rancore.",
+    "",
+    "Messaggio: «Non è niente, davvero, lascia stare»",
+    "translation: È qualcosa. Chiedimelo una seconda volta, con calma, e te lo dico.",
+    "subtext: «Lascia stare» era un test, non un'istruzione.",
+    "",
+    "Messaggio: «Fai quello che ti rende felice»",
+    "translation: Scegli pure. Ma una delle due opzioni mi ferisce, e adesso che te l'ho detto non puoi più dire che non lo sapevi.",
+    "subtext: La libertà concessa con la ricevuta di ritorno.",
+    "",
+    "Messaggio: «No tranquillo, ci vediamo un'altra volta, non ti preoccupare»",
+    "translation: Mi dispiace. Ci tenevo. Riproponimelo tu una data, così so che ci tieni anche tu.",
+    "subtext: Tre rassicurazioni di fila sono una delusione travestita.",
+    "",
+    SHARED_RULES
+  ].join("\n");
+
+  var TRANSLATION_SCHEMA = {
+    type: "OBJECT",
+    properties: {
+      translation: { type: "STRING" },
+      alt: { type: "STRING" },
+      subtext: { type: "STRING" }
+    },
+    required: ["translation", "alt", "subtext"],
+    propertyOrdering: ["translation", "alt", "subtext"]
+  };
+
+  /* ------------------------------------------------------------------ *
+   *  UI
+   * ------------------------------------------------------------------ */
 
   function setDirection(d) {
     direction = d;
@@ -506,7 +664,7 @@
     els.btnMtoF.classList.toggle("active", toF);
     els.btnFtoM.classList.toggle("active", !toF);
     els.input.placeholder = toF
-      ? "Es: «Tutto ok, fai pure quello che vuoi»"
+      ? "Es: «sto bene»"
       : "Es: «Non è niente, davvero, lascia stare»";
   }
 
@@ -515,22 +673,19 @@
     els.error.classList.add("show");
   }
 
-  function buildPrompt(isMtoF) {
-    var fromLabel = isMtoF ? "un ragazzo" : "una ragazza";
-    var toLabel = isMtoF ? "una ragazza" : "un ragazzo";
-    return 'Sei "Decoder", un traduttore ironico e affettuoso tra stili comunicativi. ' +
-      "L'utente incolla un messaggio scritto da " + fromLabel + " rivolto a " + toLabel +
-      '. Tu lo "traduci": espliciti il sottotesto emotivo probabile e lo riformuli in modo più diretto, ' +
-      "nello stile in cui " + toLabel + " si aspetterebbe di sentirselo dire.\n\n" +
-      "Regole:\n" +
-      '- Tono leggero e giocoso, da "gioco di coppia", MAI giudicante o offensivo verso nessun genere.\n' +
-      "- Gli stereotipi sono materiale comico affettuoso, non verità: non presentarli come dati di fatto.\n" +
-      "- Se il messaggio è ambiguo, scegli l'interpretazione più plausibile e simpatica, non la più drammatica.\n" +
-      "- Se il messaggio tocca temi seri (conflitti gravi, salute mentale, violenza), NON scherzare: " +
-      "rispondi con una riga seria che invita a parlarne di persona.\n" +
-      "- Rispondi SOLO con JSON valido, senza backtick e senza markdown, in questo formato:\n" +
-      '{"translation": "riformulazione diretta, 1-2 frasi, in prima persona come se la dicesse chi ha scritto il messaggio", ' +
-      '"subtext": "una riga breve che spiega il sottotesto"}';
+  function renderReading() {
+    els.translationText.textContent = readings[readingIndex];
+    els.translationText.classList.remove("swap");
+    void els.translationText.offsetWidth; // forza il restart dell'animazione
+    els.translationText.classList.add("swap");
+    els.altBtn.hidden = readings.length < 2;
+  }
+
+  function cycleReading() {
+    if (readings.length < 2) return;
+    readingIndex = (readingIndex + 1) % readings.length;
+    renderReading();
+    if (lastExchange) lastExchange.translation = readings[readingIndex];
   }
 
   async function runTranslation() {
@@ -545,7 +700,6 @@
       showError("Scrivi prima un messaggio da decodificare.");
       return;
     }
-
     if (!getKey()) {
       openModal();
       return;
@@ -557,19 +711,22 @@
     var isMtoF = direction === "MtoF";
 
     try {
-      var raw = await callClaude(buildPrompt(isMtoF), 'Messaggio da tradurre: "' + text + '"', 400);
-      var clean = raw.replace(/^```(?:json)?/, "").replace(/```$/, "").trim();
+      var raw = await callGemini(
+        isMtoF ? PROMPT_MTOF : PROMPT_FTOM,
+        "Messaggio da tradurre: «" + text + "»",
+        TRANSLATION_SCHEMA,
+        1200
+      );
+      var parsed = parseJson(raw);
 
-      var parsed;
-      try {
-        parsed = JSON.parse(clean);
-      } catch (e) {
-        // Fallback: se il modello non rispetta il JSON, mostra comunque il testo.
-        parsed = { translation: clean, subtext: "Lettura libera, fuori formato." };
-      }
+      readings = [parsed.translation, parsed.alt]
+        .map(function (t) { return (t || "").trim(); })
+        .filter(function (t, i, arr) { return t && arr.indexOf(t) === i; });
+      if (!readings.length) readings = [raw];
+      readingIndex = 0;
 
       els.resultLabel.textContent = isMtoF ? "Come lo direbbe lei" : "Come lo direbbe lui";
-      els.translationText.textContent = parsed.translation || clean;
+      renderReading();
 
       els.subtextText.textContent = "";
       var lab = document.createElement("b");
@@ -580,7 +737,7 @@
       lastExchange = {
         original: text,
         isMtoF: isMtoF,
-        translation: parsed.translation || clean,
+        translation: readings[0],
         subtext: parsed.subtext || ""
       };
 
@@ -594,77 +751,6 @@
     }
   }
 
-  function getKey() {
-    return localStorage.getItem(STORAGE_KEY) || "";
-  }
-
-  function refreshKeyBanner() {
-    els.keyBanner.classList.toggle("show", !getKey());
-  }
-
-  function openModal() {
-    els.keyInput.value = getKey();
-    els.keyStatus.textContent = getKey() ? "Key salvata in questo browser." : "";
-    els.modalOverlay.classList.add("show");
-  }
-
-  function closeModal() {
-    els.modalOverlay.classList.remove("show");
-  }
-
-  function saveKey() {
-    var val = els.keyInput.value.trim();
-    if (!val) {
-      localStorage.removeItem(STORAGE_KEY);
-      els.keyStatus.textContent = "Key rimossa.";
-    } else {
-      localStorage.setItem(STORAGE_KEY, val);
-      els.keyStatus.textContent = "Key salvata in questo browser.";
-    }
-    refreshKeyBanner();
-    setTimeout(closeModal, 500);
-  }
-
-  function callClaude(system, userText, maxTokens) {
-    var key = getKey();
-    if (!key) {
-      openModal();
-      return Promise.reject(new Error("Inserisci prima la tua API key."));
-    }
-    return fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": key,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: maxTokens || 400,
-        system: system,
-        messages: [{ role: "user", content: userText }]
-      })
-    }).then(function (response) {
-      if (response.status === 401) {
-        throw new Error("API key non valida. Controllala nelle impostazioni (⚙️).");
-      }
-      if (!response.ok) {
-        throw new Error("La richiesta è stata rifiutata (codice " + response.status + ").");
-      }
-      return response.json();
-    }).then(function (data) {
-      var blocks = Array.isArray(data.content) ? data.content : [];
-      var raw = blocks
-        .filter(function (b) { return b.type === "text"; })
-        .map(function (b) { return b.text; })
-        .join("")
-        .trim();
-      if (!raw) throw new Error("Risposta vuota dal modello.");
-      return raw;
-    });
-  }
-
   async function suggestReply() {
     if (!lastExchange) return;
 
@@ -676,21 +762,25 @@
     var replier = replierIsGirl ? "la ragazza" : "il ragazzo";
     var sender = replierIsGirl ? "il ragazzo" : "la ragazza";
 
-    var system = "Sei un amico saggio che aiuta a rispondere a un messaggio. " +
-      "Hai il messaggio originale scritto da " + sender + " e la sua interpretazione. " +
-      "Suggerisci a " + replier + " una risposta da inviare davvero.\n\n" +
-      "Regole:\n" +
-      "- Una risposta breve (1-3 frasi), naturale, come si scrive in chat, non formale.\n" +
-      "- Deve essere onesta e diretta ma calda: niente giochi di potere, niente manipolazione, niente passivo-aggressivo.\n" +
-      "- Se dal messaggio emerge tensione, la risposta apre al dialogo invece di chiuderlo.\n" +
-      "- Se il tema è serio (conflitti gravi, salute mentale, violenza), suggerisci di parlarne di persona.\n" +
-      "- Rispondi SOLO con il testo della risposta, senza virgolette, senza spiegazioni, senza premesse.";
+    var system = [
+      "Sei un amico saggio che aiuta a rispondere a un messaggio.",
+      "Hai il messaggio originale scritto da " + sender + " e la lettura del suo sottotesto.",
+      "Suggerisci a " + replier + " una risposta da inviare davvero.",
+      "",
+      "Regole:",
+      "- Una risposta breve (1-3 frasi), naturale, come si scrive in chat, non formale.",
+      "- Onesta e diretta ma calda: niente giochi di potere, niente manipolazione, niente passivo-aggressivo.",
+      "- Se emerge tensione, la risposta apre al dialogo invece di chiuderlo.",
+      "- Se il tema è serio (conflitti gravi, sofferenza psicologica, violenza), suggerisci di parlarne di persona.",
+      "- Rispondi SOLO con il testo della risposta: niente virgolette, niente spiegazioni, niente premesse."
+    ].join("\n");
 
-    var userText = "Messaggio ricevuto: \"" + lastExchange.original + "\"\n" +
-      "Sottotesto probabile: " + lastExchange.subtext;
+    var userText = "Messaggio ricevuto: «" + lastExchange.original + "»\n" +
+      "Quello che voleva dire davvero: " + lastExchange.translation + "\n" +
+      "Sottotesto: " + lastExchange.subtext;
 
     try {
-      var raw = await callClaude(system, userText, 300);
+      var raw = await callGemini(system, userText, null, 500);
       els.replyText.textContent = raw.replace(/^["«]/, "").replace(/["»]$/, "").trim();
       els.replyBox.classList.add("show");
       els.replyBtn.textContent = "Suggeriscine un'altra";
@@ -724,6 +814,176 @@
       ta.select();
       try { document.execCommand("copy"); done(); } catch (e) { els.copyBtn.textContent = "Copia manualmente"; }
       document.body.removeChild(ta);
+    }
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  Impostazioni (key + modello)
+   * ------------------------------------------------------------------ */
+
+  function store(fn, fallback) {
+    try { return fn(); } catch (e) { return fallback; }
+  }
+
+  function getKey() {
+    return store(function () { return localStorage.getItem(KEY_STORAGE) || ""; }, "");
+  }
+
+  function getModel() {
+    return store(function () { return localStorage.getItem(MODEL_STORAGE) || DEFAULT_MODEL; }, DEFAULT_MODEL);
+  }
+
+  function refreshKeyBanner() {
+    els.keyBanner.classList.toggle("show", !getKey());
+  }
+
+  function openModal() {
+    els.keyInput.value = getKey();
+    els.modelSelect.value = getModel();
+    if (!els.modelSelect.value) els.modelSelect.value = DEFAULT_MODEL;
+    els.keyStatus.textContent = getKey() ? "Key salvata in questo browser." : "";
+    els.modalOverlay.classList.add("show");
+  }
+
+  function closeModal() {
+    els.modalOverlay.classList.remove("show");
+  }
+
+  function saveSettings() {
+    var val = els.keyInput.value.trim();
+    store(function () {
+      localStorage.setItem(MODEL_STORAGE, els.modelSelect.value);
+      if (val) localStorage.setItem(KEY_STORAGE, val);
+      else localStorage.removeItem(KEY_STORAGE);
+    });
+    els.keyStatus.textContent = val
+      ? "Key salvata in questo browser."
+      : "Key rimossa.";
+    refreshKeyBanner();
+    setTimeout(closeModal, 500);
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  Gemini API
+   * ------------------------------------------------------------------ */
+
+  var SAFETY = [
+    "HARM_CATEGORY_HARASSMENT",
+    "HARM_CATEGORY_HATE_SPEECH",
+    "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+    "HARM_CATEGORY_DANGEROUS_CONTENT"
+  ].map(function (category) {
+    return { category: category, threshold: "BLOCK_ONLY_HIGH" };
+  });
+
+  function endpoint() {
+    return "https://generativelanguage.googleapis.com/v1beta/models/" +
+      encodeURIComponent(getModel()) + ":generateContent";
+  }
+
+  async function callGemini(system, userText, schema, maxTokens) {
+    var key = getKey();
+    if (!key) {
+      openModal();
+      throw new Error("Inserisci prima la tua API key di Google AI Studio.");
+    }
+
+    var body = {
+      systemInstruction: { parts: [{ text: system }] },
+      contents: [{ role: "user", parts: [{ text: userText }] }],
+      generationConfig: {
+        temperature: 1.1,
+        topP: 0.95,
+        maxOutputTokens: maxTokens || 1200
+      },
+      safetySettings: SAFETY
+    };
+    if (schema) {
+      body.generationConfig.responseMimeType = "application/json";
+      body.generationConfig.responseSchema = schema;
+    }
+
+    var data = await post(key, body, false);
+    if (data === null) {
+      // Alcuni modelli rifiutano le safetySettings esplicite: riprovo con i default.
+      delete body.safetySettings;
+      data = await post(key, body, true);
+    }
+    return extractText(data);
+  }
+
+  async function post(key, body, isRetry) {
+    var res = await fetch(endpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": key
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (res.ok) return res.json();
+
+    var detail = "";
+    try {
+      var errBody = await res.json();
+      detail = (errBody && errBody.error && errBody.error.message) || "";
+    } catch (e) { /* corpo non JSON: mi baso solo sul codice di stato */ }
+
+    if (res.status === 400 && !isRetry && /safety/i.test(detail)) return null;
+    throw new Error(describeError(res.status, detail));
+  }
+
+  function describeError(status, detail) {
+    if (status === 400 && /API[_ ]?key not valid|API_KEY_INVALID/i.test(detail)) {
+      return "API key non valida. Controllala nelle impostazioni (⚙️).";
+    }
+    if (status === 400) return "Richiesta rifiutata da Gemini. " + detail;
+    if (status === 401 || status === 403) {
+      return "Accesso negato: la key non è abilitata alla Gemini API. Creane una su aistudio.google.com/apikey.";
+    }
+    if (status === 404) {
+      return "Il modello «" + getModel() + "» non è disponibile per questa key. Cambialo nelle impostazioni (⚙️).";
+    }
+    if (status === 429) {
+      return "Hai esaurito le richieste gratuite del momento. Aspetta un minuto e riprova.";
+    }
+    if (status >= 500) return "Gemini non risponde (errore " + status + "). Riprova tra poco.";
+    return "Richiesta fallita (codice " + status + "). " + detail;
+  }
+
+  function extractText(data) {
+    if (data.promptFeedback && data.promptFeedback.blockReason) {
+      throw new Error("Gemini ha bloccato il messaggio (" + data.promptFeedback.blockReason + "). Prova a riformularlo.");
+    }
+    var candidate = (data.candidates || [])[0];
+    if (!candidate) throw new Error("Gemini non ha restituito nessuna risposta.");
+
+    var parts = (candidate.content && candidate.content.parts) || [];
+    var raw = parts
+      .filter(function (p) { return p.text && !p.thought; })
+      .map(function (p) { return p.text; })
+      .join("")
+      .trim();
+
+    if (raw) return raw;
+
+    if (candidate.finishReason === "MAX_TOKENS") {
+      throw new Error("La risposta si è interrotta perché troppo lunga. Riprova.");
+    }
+    if (candidate.finishReason && candidate.finishReason !== "STOP") {
+      throw new Error("Risposta interrotta (" + candidate.finishReason + "). Prova a riformulare il messaggio.");
+    }
+    throw new Error("Risposta vuota dal modello.");
+  }
+
+  function parseJson(raw) {
+    var clean = raw.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+    try {
+      return JSON.parse(clean);
+    } catch (e) {
+      // Il modello è uscito dal formato: mostro comunque il testo invece di fallire.
+      return { translation: clean, alt: "", subtext: "Lettura libera, fuori formato." };
     }
   }
 
