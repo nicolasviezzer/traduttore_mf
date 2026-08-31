@@ -282,108 +282,27 @@
   }
   .copy:active{ transform:translateY(1px); }
 
-  .settings-btn{
-    position:absolute;
-    top:2px;
-    right:0;
-    width:36px;
-    height:36px;
-    border-radius:50%;
-    border:1.5px solid var(--ink);
-    background:var(--card);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    font-size:16px;
-  }
-  .settings-btn:active{ transform:translateY(1px); }
-
-  .key-banner{
+  .setup-banner{
     display:none;
     margin-top:16px;
     padding:12px 14px;
     border-radius:12px;
-    border:1.5px dashed var(--violet);
-    background:var(--violet-soft);
+    border:1.5px dashed #a63a3a;
+    background:#f7e4e0;
     font-size:12.5px;
-    line-height:1.5;
+    line-height:1.55;
   }
-  .key-banner.show{ display:block; }
-  .key-banner button{
-    background:none;
-    border:none;
-    text-decoration:underline;
-    font-weight:700;
-    font-family:inherit;
-    font-size:inherit;
-    cursor:pointer;
-    padding:0;
-    color:var(--ink);
+  .setup-banner.show{ display:block; }
+  .setup-banner code{
+    font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size:12px;
+    background:#0000000d;
+    padding:1px 4px;
+    border-radius:4px;
   }
 
-  .modal-overlay{
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(28,26,34,.55);
-    z-index:50;
-    align-items:flex-end;
-    justify-content:center;
-  }
-  .modal-overlay.show{ display:flex; }
-  .modal{
-    width:100%;
-    max-width:480px;
-    background:var(--paper);
-    border-top:1.5px solid var(--ink);
-    border-radius:20px 20px 0 0;
-    padding:22px 20px 28px;
-    max-height:92vh;
-    overflow-y:auto;
-  }
-  .modal h2{
-    font-family:'Fraunces', serif;
-    font-size:22px;
-    margin:0 0 8px;
-  }
-  .modal p{
-    font-size:13px;
-    line-height:1.55;
-    opacity:.8;
-    margin:0 0 16px;
-  }
-  .modal a{ color:var(--violet); font-weight:700; }
-  .field-label{
-    font-size:11px;
-    text-transform:uppercase;
-    letter-spacing:.12em;
-    font-weight:700;
-    opacity:.55;
-    margin-bottom:6px;
-  }
-  .key-input, .model-select{
-    width:100%;
-    padding:13px;
-    border-radius:12px;
-    border:1.5px solid var(--ink);
-    font-family:'Space Grotesk', sans-serif;
-    font-size:14px;
-    background:var(--card);
-    color:var(--ink);
-    margin-bottom:14px;
-  }
-  .modal-actions{
-    display:flex;
-    gap:8px;
-  }
-  .modal-actions .go{ margin-top:0; box-shadow:3px 3px 0 var(--violet); }
-  .modal-actions .ghost{ flex:0 0 auto; padding:15px 16px; }
-  .key-status{
-    font-size:12px;
-    margin-top:10px;
-    opacity:.7;
-  }
+
+
 
   .loading{
     display:none;
@@ -432,15 +351,15 @@
 <body>
 <div class="app">
   <header>
-    <button class="settings-btn" id="settingsBtn" aria-label="Impostazioni API key">⚙️</button>
     <div class="eyebrow">Decoder v2 · Gemini</div>
     <h1>Cosa <em>intende</em><br>davvero dire.</h1>
     <p class="sub">Incolla un messaggio, scegli la direzione, e leggi tra le righe — per gioco, non per scienza.</p>
   </header>
 
-  <div class="key-banner" id="keyBanner">
-    Per usare Decoder serve la tua API key di Google AI Studio (gratuita), salvata solo in questo browser.
-    <button id="keyBannerBtn">Inseriscila qui</button>.
+  <div class="setup-banner" id="setupBanner">
+    <b>Questo build non ha una API key.</b> Il deploy non ha iniettato il secret
+    <code>GEMINI_API_KEY</code>: finché non viene configurato, Decoder non può tradurre.
+    Le istruzioni sono nel README del repository.
   </div>
 
   <div class="switch" id="switch">
@@ -486,40 +405,6 @@
   <p class="disclaimer">Traduzioni generate per ironia e leggerezza — nessuna pretesa scientifica su come «parlano» uomini o donne. Ognuno comunica a modo suo.</p>
 </div>
 
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <h2>API key</h2>
-    <p id="sharedNote" hidden>
-      Questo sito ha già una <b>key condivisa</b>: Decoder funziona senza che tu faccia niente.
-      Se preferisci non pesare sulla quota comune — o se vedi l'errore «richieste esaurite» —
-      incolla qui sotto la tua, gratuita, presa da
-      <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.
-      Resta salvata solo in questo browser.
-    </p>
-    <p id="ownNote">
-      Decoder usa la <b>Gemini API di Google</b>, che ha un piano gratuito. La key resta
-      salvata solo in questo browser (localStorage) e viene inviata unicamente a
-      <code>generativelanguage.googleapis.com</code>. Puoi crearne una in trenta secondi su
-      <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.
-    </p>
-    <div class="field-label">La tua API key</div>
-    <input class="key-input" id="keyInput" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false">
-    <div class="field-label">Modello</div>
-    <select class="model-select" id="modelSelect">
-      <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite — consigliato, gratis</option>
-      <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite</option>
-      <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
-      <option value="gemini-3.5-flash">gemini-3.5-flash — più bravo, più lento</option>
-      <option value="gemini-flash-lite-latest">gemini-flash-lite-latest — alias sempre aggiornato</option>
-    </select>
-    <div class="modal-actions">
-      <button class="go" id="saveKeyBtn">Salva</button>
-      <button class="ghost" id="closeModalBtn">Chiudi</button>
-    </div>
-    <p class="key-status" id="keyStatus"></p>
-  </div>
-</div>
-
 <script>
 (function () {
   "use strict";
@@ -530,9 +415,9 @@
   var BUILD_KEY = "__GEMINI_API_KEY__";
   var SHARED_KEY = /^__/.test(BUILD_KEY) ? "" : BUILD_KEY;
 
-  var DEFAULT_MODEL = "gemini-3.5-flash-lite";
+  // Modello uguale per tutti: cambia questa riga per cambiarlo ovunque.
+  var MODEL = "gemini-3.5-flash-lite";
   var KEY_STORAGE = "decoder_gemini_api_key";
-  var MODEL_STORAGE = "decoder_gemini_model";
   var LEGACY_KEY_STORAGE = "decoder_anthropic_api_key";
 
   var direction = "MtoF";
@@ -547,8 +432,7 @@
   ["input","goBtn","btnMtoF","btnFtoM","switch","loading","error","result",
    "resultCard","resultLabel","translationText","subtextText","altBtn",
    "replyBtn","replyBox","replyText","replyLabel","copyBtn",
-   "settingsBtn","keyBanner","keyBannerBtn","modalOverlay","keyInput","modelSelect",
-   "saveKeyBtn","closeModalBtn","keyStatus","sharedNote","ownNote"].forEach(function (id) {
+   "setupBanner"].forEach(function (id) {
     els[id] = document.getElementById(id);
   });
 
@@ -558,13 +442,6 @@
   els.altBtn.addEventListener("click", cycleReading);
   els.replyBtn.addEventListener("click", suggestReply);
   els.copyBtn.addEventListener("click", copyReply);
-  els.settingsBtn.addEventListener("click", openModal);
-  els.keyBannerBtn.addEventListener("click", openModal);
-  els.closeModalBtn.addEventListener("click", closeModal);
-  els.modalOverlay.addEventListener("click", function (e) {
-    if (e.target === els.modalOverlay) closeModal();
-  });
-  els.saveKeyBtn.addEventListener("click", saveSettings);
   els.input.addEventListener("keydown", function (e) {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) runTranslation();
   });
@@ -714,7 +591,7 @@
       return;
     }
     if (!getKey()) {
-      openModal();
+      showError("Questo build non ha una API key configurata: il deploy non ha iniettato il secret GEMINI_API_KEY.");
       return;
     }
 
@@ -831,62 +708,33 @@
   }
 
   /* ------------------------------------------------------------------ *
-   *  Impostazioni (key + modello)
+   *  Key e modello
    * ------------------------------------------------------------------ */
 
   function store(fn, fallback) {
     try { return fn(); } catch (e) { return fallback; }
   }
 
-  function getOwnKey() {
-    return store(function () { return localStorage.getItem(KEY_STORAGE) || ""; }, "");
-  }
-
-  // La key personale ha sempre la precedenza su quella condivisa del sito.
+  // La key è quella iniettata al deploy, uguale per tutti: non viene mai chiesta.
+  // L'override in localStorage esiste solo per sviluppare in locale, dove il
+  // segnaposto non è stato sostituito — si imposta dalla console del browser:
+  //   localStorage.setItem("decoder_gemini_api_key", "AIza...")
   function getKey() {
-    return getOwnKey() || SHARED_KEY;
-  }
-
-  function keyStatusText() {
-    if (getOwnKey()) return "Stai usando la tua key, salvata in questo browser.";
-    if (SHARED_KEY) return "Stai usando la key condivisa del sito.";
-    return "";
+    return SHARED_KEY || store(function () {
+      return localStorage.getItem(KEY_STORAGE) || "";
+    }, "");
   }
 
   function getModel() {
-    return store(function () { return localStorage.getItem(MODEL_STORAGE) || DEFAULT_MODEL; }, DEFAULT_MODEL);
+    return MODEL;
   }
 
-  function refreshKeyBanner() {
-    els.keyBanner.classList.toggle("show", !getKey());
-  }
-
-  function openModal() {
-    els.keyInput.value = getOwnKey();
-    els.modelSelect.value = getModel();
-    if (!els.modelSelect.value) els.modelSelect.value = DEFAULT_MODEL;
-    els.sharedNote.hidden = !SHARED_KEY;
-    els.ownNote.hidden = !!SHARED_KEY;
-    els.keyStatus.textContent = keyStatusText();
-    els.modalOverlay.classList.add("show");
-  }
-
-  function closeModal() {
-    els.modalOverlay.classList.remove("show");
-  }
-
-  function saveSettings() {
-    var val = els.keyInput.value.trim();
-    store(function () {
-      localStorage.setItem(MODEL_STORAGE, els.modelSelect.value);
-      if (val) localStorage.setItem(KEY_STORAGE, val);
-      else localStorage.removeItem(KEY_STORAGE);
-    });
-    els.keyStatus.textContent = val
-      ? "Key salvata in questo browser."
-      : (SHARED_KEY ? "Key rimossa: torni a usare quella condivisa del sito." : "Key rimossa.");
-    refreshKeyBanner();
-    setTimeout(closeModal, 500);
+  // Senza key non c'è niente da fare: lo dico e disabilito il pulsante,
+  // invece di far scoprire il problema al primo clic.
+  function refreshSetupBanner() {
+    var pronto = !!getKey();
+    els.setupBanner.classList.toggle("show", !pronto);
+    els.goBtn.disabled = !pronto;
   }
 
   /* ------------------------------------------------------------------ *
@@ -910,8 +758,7 @@
   async function callGemini(system, userText, schema, maxTokens) {
     var key = getKey();
     if (!key) {
-      openModal();
-      throw new Error("Inserisci prima la tua API key di Google AI Studio.");
+      throw new Error("Nessuna API key configurata in questo build.");
     }
 
     var body = {
@@ -1014,7 +861,7 @@
   }
 
   setDirection("MtoF");
-  refreshKeyBanner();
+  refreshSetupBanner();
 })();
 </script>
 </body>

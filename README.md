@@ -6,7 +6,7 @@ Un traduttore ironico tra "linguaggio maschile" e "linguaggio femminile" — dec
 
 ## 🚀 Demo
 
-Apri `index.html` in qualsiasi browser, oppure pubblicalo con GitHub Pages (vedi sotto).
+Pubblicato su GitHub Pages con una key condivisa: chi apre il sito non deve configurare niente. Per farlo girare in locale servono due righe, vedi [Sviluppare in locale](#sviluppare-in-locale).
 
 ## 🎭 Come traduce
 
@@ -26,18 +26,25 @@ Ogni decodifica produce **due letture diverse**: il pulsante *↻ un'altra lettu
 
 Decoder chiama la [Gemini API di Google](https://ai.google.dev/), che ha un **piano gratuito**. Non c'è nessun backend: le richieste vanno direttamente dal browser a `generativelanguage.googleapis.com`.
 
-La key può arrivare da due strade, e la prima che c'è vince:
+**La key è una sola per tutti e non viene mai chiesta a chi usa l'app.** Non c'è nessun pannello impostazioni: la key viene iniettata dentro `index.html` durante il deploy, a partire dal secret `GEMINI_API_KEY` (vedi sotto). Chi apre il sito scrive un messaggio e basta.
 
-1. **La tua key personale**, inserita dall'icona ⚙️ e salvata **solo nel `localStorage` del tuo browser**. Non viene mai committata. Creane una gratis in trenta secondi su [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
-2. **La key condivisa del sito**, iniettata durante il deploy dal secret `GEMINI_API_KEY` (vedi sotto). Serve a far funzionare la demo pubblica senza chiedere niente a chi arriva.
-
-Se apri `index.html` in locale, la key condivisa non c'è: serve la tua.
+Se il secret non è configurato, l'app lo dice con un avviso in cima e tiene il pulsante disattivato, invece di far scoprire il problema al primo clic.
 
 ### Modello
 
-Di default Decoder usa **`gemini-3.5-flash-lite`**: è veloce, sta nel free tier ed è più che sufficiente per battute e sottotesti. Dal menu ⚙️ puoi passare a `gemini-3.1-flash-lite`, `gemini-2.5-flash-lite`, `gemini-3.5-flash` (più bravo, un po' più lento) o all'alias `gemini-flash-lite-latest`.
+Decoder usa **`gemini-3.5-flash-lite`**: veloce, dentro il free tier, più che sufficiente per battute e sottotesti. È fissato nella costante `MODEL` in cima allo `<script>` di `index.html` — una riga da cambiare se vuoi passare a `gemini-3.1-flash-lite`, `gemini-2.5-flash-lite` o `gemini-3.5-flash` (più bravo, un po' più lento).
 
-Il free tier ha limiti di richieste al minuto e al giorno: se vedi l'errore *"Hai esaurito le richieste gratuite del momento"*, aspetta un minuto.
+Il free tier ha limiti di richieste al minuto e al giorno: se compare *"Hai esaurito le richieste gratuite del momento"*, aspetta un minuto.
+
+### Sviluppare in locale
+
+Aprendo `index.html` in locale il segnaposto non è stato sostituito, quindi la key non c'è. Per provare l'app dalla tua macchina, impostala una volta dalla console del browser:
+
+```js
+localStorage.setItem("decoder_gemini_api_key", "AIza...")
+```
+
+Vale solo per il tuo browser, non finisce mai nel codice, e sul sito pubblicato viene ignorata in favore della key del build.
 
 ## 📦 Pubblicare su GitHub Pages
 
@@ -62,9 +69,18 @@ Fatto questo, l'app è live su `https://nicolasviezzer.github.io/traduttore_mf/`
 - **Resta sul free tier** e non collegare un account di fatturazione a quel progetto: nel peggiore dei casi si esaurisce la quota gratuita, non arriva un conto.
 - **Tieni una key dedicata** solo per questo sito, così revocarla non rompe altro.
 
-Chi vuole non pesare sulla quota comune può sempre inserire la propria key dall'icona ⚙️: ha la precedenza su quella condivisa.
+Per un prodotto con utenti reali il pattern giusto sarebbe un piccolo backend (es. un Cloudflare Worker) che tiene la key lato server e fa da proxy, così al browser non arriva mai. Per un progetto "smanettone" con una key dedicata e limitata, va bene così.
 
-⚠️ Anche la key personale nel `localStorage` è esposta a chi ha accesso a quel browser/dispositivo o esegue codice sulla stessa pagina (XSS). Per un prodotto con utenti reali il pattern giusto sarebbe un piccolo backend (es. un Cloudflare Worker) che tiene la key lato server e fa da proxy. Per un progetto "smanettone", va bene così.
+## ⚡ Push rapido
+
+`push.bat` fa tutto in un colpo: aggiunge le modifiche, committa, si riallinea a `origin` con un rebase e pusha. Il push su `main` fa partire da solo il deploy.
+
+```bat
+push.bat
+push.bat sistemato il prompt di Lei verso Lui
+```
+
+Senza argomenti il messaggio di commit è `Aggiornamento <data> <ora>`; tutto quello che scrivi dopo il nome diventa il messaggio. Se il rebase trova conflitti si ferma e ti dice come uscirne, senza pushare niente.
 
 ## 🛠️ Stack
 
