@@ -67,7 +67,7 @@ if errorlevel 1 (
 
 echo.
 echo [OK] Fatto. Il deploy su GitHub Pages parte da solo tra qualche secondo.
-echo      Stato: https://github.com/nicolasviezzer/traduttore_mf/actions
+echo      Stato: https://github.com/contesamuele999-dev/traduttore_mf/actions
 
 :fine
 echo.

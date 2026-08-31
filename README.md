@@ -50,13 +50,13 @@ Vale solo per il tuo browser, non finisce mai nel codice, e sul sito pubblicato 
 
 Il deploy è automatico: [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) parte a ogni push su `main`, copia il sito in `_site/`, sostituisce il segnaposto `__GEMINI_API_KEY__` dentro `index.html` con il secret e pubblica.
 
-Servono tre passaggi, tutti **dal proprietario del repository** (richiedono permessi di admin):
+La configurazione richiede permessi di admin sul repository:
 
 1. **Il secret** — Settings → Secrets and variables → Actions → *New repository secret*, nome `GEMINI_API_KEY`, valore la key presa da [aistudio.google.com/apikey](https://aistudio.google.com/apikey). Senza questo secret il workflow si ferma con un errore esplicito invece di pubblicare un sito rotto.
-2. **Pages** — Settings → Pages → **Source: GitHub Actions**. (Non "Deploy from a branch": la key va iniettata durante il build.)
-3. **Visibilità** — Pages su un repository **privato** richiede GitHub Pro / Team / Enterprise. Con un account gratuito bisogna prima rendere pubblico il repository: Settings → General → Danger Zone → *Change visibility*.
+2. **Pages** — Settings → Pages → **Source: GitHub Actions**. Questo passaggio è obbligatorio: con *"Deploy from a branch"* GitHub pubblica i file grezzi del repository, dove il segnaposto non è stato sostituito, e il sito resta senza key.
+3. **Visibilità** — Pages su un repository **privato** richiede GitHub Pro / Team / Enterprise. Con un account gratuito il repository dev'essere pubblico.
 
-Fatto questo, l'app è live su `https://nicolasviezzer.github.io/traduttore_mf/` e chi la apre non deve inserire nessuna key.
+L'app è live su **https://contesamuele999-dev.github.io/traduttore_mf/** e chi la apre non deve inserire nessuna key.
 
 ### 🔒 Cosa sapere sulla key condivisa
 
@@ -64,7 +64,7 @@ Fatto questo, l'app è live su `https://nicolasviezzer.github.io/traduttore_mf/`
 
 È un compromesso accettabile per una demo, a patto di mettere le protezioni:
 
-- **Limita la key al dominio.** Su [Google Cloud → Credentials](https://console.cloud.google.com/apis/credentials), sulla key: *Application restrictions → Websites*, e aggiungi `https://nicolasviezzer.github.io/*`. Blocca l'uso da altri siti (non blocca `curl`, ma taglia via l'abuso casuale).
+- **Limita la key al dominio.** Su [Google Cloud → Credentials](https://console.cloud.google.com/apis/credentials), sulla key: *Application restrictions → Websites*, e aggiungi `https://contesamuele999-dev.github.io/*`. Blocca l'uso da altri siti (non blocca `curl`, ma taglia via l'abuso casuale).
 - **Limita le API.** *API restrictions → Restrict key →* solo Generative Language API.
 - **Resta sul free tier** e non collegare un account di fatturazione a quel progetto: nel peggiore dei casi si esaurisce la quota gratuita, non arriva un conto.
 - **Tieni una key dedicata** solo per questo sito, così revocarla non rompe altro.
